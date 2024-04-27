@@ -1,10 +1,13 @@
 import { useAtomValue } from "jotai";
-import { centroidAtom, flowPositionAtom } from "../atoms/common";
+import { currentAngleAtom } from "../atoms/common";
 import { Line } from "@react-three/drei";
+import { TShape } from "../types";
+import { calculateCentroid, calculateFlowPosition } from "../func/shape";
 
-export const Flow = () => {
-  const flowPosition = useAtomValue(flowPositionAtom);
-  const centroid = useAtomValue(centroidAtom);
+export const Flow = ({ shape }: { shape: TShape }) => {
+  const angle = useAtomValue(currentAngleAtom);
+  const flowPosition = calculateFlowPosition(shape, angle);
+  const centroid = calculateCentroid(shape);
   if (!flowPosition) {
     return null;
   }

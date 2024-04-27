@@ -5,7 +5,7 @@ import {
   flowEnabledAtom,
   grabPointIdAtom,
   planePointAtom,
-  shapeAtom,
+  shapesAtom,
 } from "../atoms/common";
 
 let started = false;
@@ -28,18 +28,20 @@ const process = (delta: number) => {
   const planePoint = store.get(planePointAtom);
 
   if (grabId) {
-    store.set(shapeAtom, (shape) => ({
-      ...shape,
-      points: shape.points.map((point) => {
-        if (point.id === grabId) {
-          return {
-            ...point,
-            position: planePoint,
-          };
-        }
-        return point;
-      }),
-    }));
+    store.set(shapesAtom, (shapes) =>
+      shapes.map((shape) => ({
+        ...shape,
+        points: shape.points.map((point) => {
+          if (point.id === grabId) {
+            return {
+              ...point,
+              position: planePoint,
+            };
+          }
+          return point;
+        }),
+      }))
+    );
   }
 };
 

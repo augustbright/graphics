@@ -4,7 +4,6 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import {
   planePointAtom,
   selectedPointAtom,
-  shapeAtom,
   soundEnabledAtom,
 } from "../atoms/common";
 import { VectorDataView } from "./VectorDataView";
@@ -16,7 +15,6 @@ import { Metronome } from "./Metronome";
 
 export const Sidebar = () => {
   const planePoint = useAtomValue(planePointAtom);
-  const { points } = useAtomValue(shapeAtom);
   const selectedPoint = useAtomValue(selectedPointAtom);
   const [soundEnabled, setSoundEnabled] = useAtom(soundEnabledAtom);
   return (
@@ -69,11 +67,6 @@ export const Sidebar = () => {
       <h1>sidebar</h1>
 
       <VectorDataView vector={planePoint} />
-
-      <h2>shape</h2>
-      {points.map((point) => (
-        <VectorDataView key={point.id} vector={point.position} />
-      ))}
     </aside>
   );
 };

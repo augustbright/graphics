@@ -1,10 +1,12 @@
 import { useAtomValue } from "jotai";
-import { closestSideAtom, planePointAtom } from "../atoms/common";
+import { planePointAtom } from "../atoms/common";
 import { Line } from "@react-three/drei";
+import { TShape } from "../types";
+import { findClosestSide } from "../func/shape";
 
-export const NewPointPreview = () => {
-  const closest = useAtomValue(closestSideAtom);
+export const NewPointPreview = ({ shape }: { shape: TShape }) => {
   const planePoint = useAtomValue(planePointAtom);
+  const closest = findClosestSide(shape, planePoint);
   if (!closest) {
     return null;
   }

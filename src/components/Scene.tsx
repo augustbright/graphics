@@ -15,11 +15,7 @@ import {
 } from "../atoms/common";
 import { addPoint } from "../func/common";
 import { PointerEvent, useRef, useState } from "react";
-import { Shape } from "./Shape";
-import { NewPointPreview } from "./NewPointPreview";
-import { Flow } from "./Flow";
 import { PointSelection } from "./PointSelection";
-import { effectsAtom } from "../atoms/effects";
 import {
   Camera,
   Raycaster,
@@ -27,12 +23,12 @@ import {
   Plane as ThreePlane,
   Vector2,
 } from "three";
+import { Shapes } from "./Shapes";
 
 const raycaster = new Raycaster();
 const plane = new ThreePlane(new Vector3(0, 0, 1), 0);
 
 export const Scene = () => {
-  useAtom(effectsAtom);
   const camera = useRef(null);
 
   const getEventPoint = (event: PointerEvent) => {
@@ -121,10 +117,8 @@ export const Scene = () => {
         <Plane args={[1000, 1000, 10, 10]} position={[0, 0, -1]}>
           <meshPhongMaterial color="gray" />
         </Plane>
-        <Shape />
+        <Shapes />
         <PointSelection />
-        <NewPointPreview />
-        <Flow />
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport
             axisColors={["red", "green", "blue"]}

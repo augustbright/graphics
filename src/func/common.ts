@@ -1,58 +1,60 @@
 import { getDefaultStore } from "jotai";
-import { TVector3 } from "../types";
 import {
-  closestSideAtom,
   selectedPointIdAtom,
-  shapeAtom,
+  selectedShapeAtom,
+  shapesAtom,
 } from "../atoms/common";
+import { Vector3 } from "three";
+import { findClosestSide, withNewPoint } from "./shape";
 
-export const addPoint = (position: TVector3): string | null => {
-  const id = crypto.randomUUID();
+export const addPoint = (position: Vector3) => {
   const store = getDefaultStore();
+  const selectedShape = store.get(selectedShapeAtom);
 
-  const { points } = store.get(shapeAtom);
-  const closestSide = store.get(closestSideAtom);
+  if (
+    !selectedShape ||
+    (selectedShape.points.length > 1 &&
+      !findClosestSide(selectedShape, position))
+  ) {
+    const id = crypto.randomUUID();
+    store.set(shapesAtom, (shapes) => [
+      ...shapes,
+      {
+        id: crypto.randomUUID(),
+        points: [{ id, position }],
+      },
+    ]);
 
-  if (points.length < 2) {
-    store.set(shapeAtom, (prev) => ({
-      ...prev,
-      points: [
-        ...prev.points,
-        {
-          id,
-          position,
-        },
-      ],
-    }));
-  } else {
-    if (!closestSide) {
-      return null;
-    }
-    store.set(shapeAtom, (prev) => {
-      const index = prev.points.findIndex(
-        (point) => point.id === closestSide[1].id
-      );
-      const next = [...prev.points];
-      next.splice(index, 0, {
-        id,
-        position,
-      });
-      return {
-        ...prev,
-        points: next,
-      };
-    });
+    store.set(selectedPointIdAtom, id);
+
+    return;
   }
 
-  store.set(selectedPointIdAtom, id);
+  store.set(shapesAtom, (shapes) =>
+    shapes.map((shape) => {
+      if (shape.id !== selectedShape.id) {
+        return shape;
+      }
 
-  return id;
+      const id = crypto.randomUUID();
+      const newShape = withNewPoint(shape, { id, position });
+      if (!newShape) {
+        return shape;
+      }
+      store.set(selectedPointIdAtom, id);
+      return newShape;
+    })
+  );
 };
 
 export const deletePoint = (id: string) => {
   const store = getDefaultStore();
-  store.set(shapeAtom, (prev) => ({
-    ...prev,
-    points: prev.points.filter((point) => point.id !== id),
-  }));
+  store.set(shapesAtom, (shapes) =>
+    shapes
+      .map((shape) => ({
+        ...shape,
+        points: shape.points.filter((point) => point.id !== id),
+      }))
+      .filter((shape) => shape.points.length > 0)
+  );
 };

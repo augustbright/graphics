@@ -1,29 +1,17 @@
 import { Tetrahedron } from "@react-three/drei";
 import { TPoint } from "../types";
-import { useAtom, useAtomValue } from "jotai";
-import {
-  currentFlowPointAtom,
-  hoveredPointIdAtom,
-  selectedPointIdAtom,
-} from "../atoms/common";
-import { Color } from "@react-three/fiber";
+import { useAtom } from "jotai";
+import { hoveredPointIdAtom, selectedPointIdAtom } from "../atoms/common";
 
-export const ShapePoint = ({ point }: { point: TPoint }) => {
+export const ShapePoint = ({
+  point,
+  isSelectedShape,
+}: {
+  point: TPoint;
+  isSelectedShape: boolean;
+}) => {
   const [, setHoveredId] = useAtom(hoveredPointIdAtom);
   const [, setSelectedId] = useAtom(selectedPointIdAtom);
-
-  const currentFlowPoint = useAtomValue(currentFlowPointAtom);
-  const isCurrent = currentFlowPoint?.id === point.id;
-  // useEffect(() => {
-  //   if (isCurrent) {
-  //     synth.triggerAttackRelease("C4", "8n");
-  //   }
-  // }, [isCurrent]);
-
-  let color: Color = "white";
-  if (isCurrent) {
-    color = "red";
-  }
 
   return (
     <>
@@ -40,11 +28,10 @@ export const ShapePoint = ({ point }: { point: TPoint }) => {
           setSelectedId(point.id);
         }}
       >
-        {isCurrent && (
-          <pointLight position={[0, 0, 1]} intensity={5} color={"red"} />
-        )}
-
-        <meshBasicMaterial color={color} wireframe />
+        <meshBasicMaterial
+          color={isSelectedShape ? "yellow" : "white"}
+          wireframe
+        />
       </Tetrahedron>
     </>
   );
