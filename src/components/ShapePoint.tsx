@@ -2,6 +2,15 @@ import { Tetrahedron } from "@react-three/drei";
 import { TPoint } from "../types";
 import { useAtom } from "jotai";
 import { hoveredPointIdAtom, selectedPointIdAtom } from "../atoms/common";
+import { useThree } from "@react-three/fiber";
+import {
+  BoxGeometry,
+  Mesh,
+  MeshBasicMaterial,
+  Sphere,
+  SphereGeometry,
+} from "three";
+import { runInALoop } from "@/loop";
 
 export const ShapePoint = ({
   point,

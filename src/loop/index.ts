@@ -50,14 +50,23 @@ export const startLoop = async () => {
     return;
   }
   started = true;
+  runInALoop((delta) => {
+    process(delta);
+    return true;
+  });
+};
+
+export const runInALoop = async (fn: (delta: number) => boolean) => {
   let last = performance.now();
   const frame = async () => {
     const now = performance.now();
     const delta = now - last;
     last = now;
-    process(delta);
+    const goOn = fn(delta);
 
-    requestAnimationFrame(frame);
+    if (goOn) {
+      requestAnimationFrame(frame);
+    }
   };
   requestAnimationFrame(frame);
 };

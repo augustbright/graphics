@@ -6,6 +6,8 @@ import {
 } from "../atoms/common";
 import { Vector3 } from "three";
 import { findClosestSide, withNewPoint } from "./shape";
+import { Synth, now } from "tone";
+import { TShape } from "@/types";
 
 export const addPoint = (position: Vector3) => {
   const store = getDefaultStore();
@@ -21,6 +23,8 @@ export const addPoint = (position: Vector3) => {
       ...shapes,
       {
         id: crypto.randomUUID(),
+        frequency: "C4",
+        duration: "8n",
         points: [{ id, position }],
       },
     ]);
@@ -57,4 +61,26 @@ export const deletePoint = (id: string) => {
       }))
       .filter((shape) => shape.points.length > 0)
   );
+};
+
+export const updateShapeById = (id: TShape["id"], shape: Partial<TShape>) => {
+  const store = getDefaultStore();
+  store.set(shapesAtom, (shapes) =>
+    shapes.map((s) => (s.id === id ? { ...s, ...shape } : s))
+  );
+};
+
+export const playShapeSound = (shapeId: TShape["id"]) => {
+  const store = getDefaultStore();
+  const shape = store.get(shapesAtom).find((shape) => shape.id === shapeId);
+  const synth = new Synth().toDestination();
+
+  if (!shape) {
+    return;
+  }
+
+  synth.triggerAttackRelease(shape.frequency, shape.duration, now());
+  setTimeout(() => {
+    synth.dispose();
+  }, 1000);
 };

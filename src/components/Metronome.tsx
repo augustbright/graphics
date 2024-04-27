@@ -1,19 +1,19 @@
 import { css } from "@emotion/css";
-import { useAtomValue } from "jotai";
 import { currentAngleAtom, flowEnabledAtom } from "../atoms/common";
 import { useAtom } from "jotai";
-import { Button } from "@mui/material";
+import { Button } from "./ui/button";
 
 export const Metronome = () => {
-  const angle = useAtomValue(currentAngleAtom);
+  const [angle, setAngle] = useAtom(currentAngleAtom);
   const [flowEnabled, setFlowEnabled] = useAtom(flowEnabledAtom);
   const handleClick = () => {
     setFlowEnabled(!flowEnabled);
+    setAngle(0);
   };
 
   return (
     <Button
-      variant="outlined"
+      variant={flowEnabled ? "outline" : "destructive"}
       className={css`
         display: flex !important;
         align-items: stretch !important;
@@ -24,7 +24,6 @@ export const Metronome = () => {
         height: 100px;
         border-radius: 50% !important;
       `}
-      color={flowEnabled ? "success" : "warning"}
       onClick={handleClick}
     >
       <div

@@ -8,11 +8,13 @@ export const planePointAtom = atom<TVector3>(new Vector3());
 export const shapesAtom = atom<TShape[]>([
   {
     id: "1",
+    frequency: "C4",
+    duration: "8n",
     points: [
       { id: "1", position: new Vector3(0, 0, 0) },
-      { id: "2", position: new Vector3(0, 1, 0) },
-      { id: "3", position: new Vector3(1, 1, 0) },
-      { id: "4", position: new Vector3(1, 0, 0) },
+      { id: "2", position: new Vector3(0, 2, 0) },
+      { id: "3", position: new Vector3(2, 2, 0) },
+      { id: "4", position: new Vector3(2, 0, 0) },
     ],
   },
 ]);
@@ -44,6 +46,6 @@ export const hoveredPointAtom = atom<TPoint | null>((get) =>
 
 export const flowEnabledAtom = atom<boolean>(false);
 export const bpmAtom = atom<number>(20);
-export const currentAngleAtom = atom<number>(45);
+export const currentAngleAtom = atom<number>(0);
 
 export const soundEnabledAtom = atom<boolean>(false);

@@ -1,72 +1,27 @@
-import { useAtom, useAtomValue } from "jotai";
-import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import VolumeUpIcon from "@mui/icons-material/VolumeUp";
-import {
-  planePointAtom,
-  selectedPointAtom,
-  soundEnabledAtom,
-} from "../atoms/common";
-import { VectorDataView } from "./VectorDataView";
+import cn from "classnames";
 import { css } from "@emotion/css";
-import { Button, Checkbox, FormControlLabel, FormGroup } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { deletePoint } from "../func/common";
-import { Metronome } from "./Metronome";
+import { Play } from "./Play";
+import { EditShape } from "./EditShape";
+import { useAtomValue } from "jotai";
+import { selectedShapeAtom } from "@/atoms/common";
 
 export const Sidebar = () => {
-  const planePoint = useAtomValue(planePointAtom);
-  const selectedPoint = useAtomValue(selectedPointAtom);
-  const [soundEnabled, setSoundEnabled] = useAtom(soundEnabledAtom);
+  const selectedShape = useAtomValue(selectedShapeAtom);
   return (
     <aside
-      className={css`
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        min-width: 200px;
-        padding: 16px;
-        background-color: #303030;
-      `}
-    >
-      <div
-        className={css`
+      className={cn(
+        css`
           display: flex;
-          justify-content: center;
-        `}
-      >
-        <Metronome />
-      </div>
-      <div>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Checkbox
-                value={soundEnabled}
-                onChange={() => setSoundEnabled(!soundEnabled)}
-                color="primary"
-                icon={<VolumeOffIcon />}
-                checkedIcon={<VolumeUpIcon />}
-              />
-            }
-            label="Sound"
-          />
-        </FormGroup>
-      </div>
-      <Button
-        disabled={!selectedPoint}
-        variant="outlined"
-        startIcon={<DeleteIcon />}
-        onClick={() => {
-          if (selectedPoint) {
-            deletePoint(selectedPoint.id);
-          }
-        }}
-      >
-        Delete
-      </Button>
-      <h1>sidebar</h1>
-
-      <VectorDataView vector={planePoint} />
+          flex-direction: column;
+          gap: 16px;
+          min-width: 200px;
+          padding: 16px;
+        `,
+        "border-r"
+      )}
+    >
+      <Play />
+      {selectedShape && <EditShape />}
     </aside>
   );
 };
