@@ -1,5 +1,12 @@
 import { getDefaultStore } from "jotai";
-import { bpmAtom, currentAngleAtom, flowEnabledAtom } from "../atoms/common";
+import {
+  bpmAtom,
+  currentAngleAtom,
+  flowEnabledAtom,
+  grabPointIdAtom,
+  planePointAtom,
+  shapeAtom,
+} from "../atoms/common";
 
 let started = false;
 
@@ -15,6 +22,24 @@ const process = (delta: number) => {
     const dAngle = dBeat * 360;
 
     store.set(currentAngleAtom, (prev) => (prev + dAngle) % 360);
+  }
+
+  const grabId = store.get(grabPointIdAtom);
+  const planePoint = store.get(planePointAtom);
+
+  if (grabId) {
+    store.set(shapeAtom, (shape) => ({
+      ...shape,
+      points: shape.points.map((point) => {
+        if (point.id === grabId) {
+          return {
+            ...point,
+            position: planePoint,
+          };
+        }
+        return point;
+      }),
+    }));
   }
 };
 

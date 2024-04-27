@@ -1,19 +1,14 @@
 import { atom } from "jotai";
 import { Vector3 } from "three";
 import { TPoint, TShape, TVector3 } from "../types";
-import { tVector3ToVector3 } from "../func/utils";
+import { calculateCentroid } from "../func/utils";
 
 export const planePointAtom = atom<TVector3>(new Vector3());
-export const roundPointAtom = atom((get) => {
-  const point = get(planePointAtom);
-  return {
-    x: Math.round(point.x),
-    y: Math.round(point.y),
-    z: Math.round(point.z),
-  };
-});
 
-export const shapeAtom = atom<TShape>([]);
+export const shapeAtom = atom<TShape>({
+  id: "shape",
+  points: [],
+});
 
 export const hoveredPointIdAtom = atom<TPoint["id"] | null>(null);
 export const grabPointIdAtom = atom<TPoint["id"] | null>(null);
@@ -21,22 +16,28 @@ export const selectedPointIdAtom = atom<TPoint["id"] | null>(null);
 
 export const selectedPointAtom = atom<TPoint | null>((get) => {
   const selectedPointId = get(selectedPointIdAtom);
-  return get(shapeAtom).find((point) => point.id === selectedPointId) || null;
+  return (
+    get(shapeAtom).points.find((point) => point.id === selectedPointId) || null
+  );
 });
 
 export const grabPointAtom = atom<TPoint | null>((get) => {
   const grabPointId = get(grabPointIdAtom);
-  return get(shapeAtom).find((point) => point.id === grabPointId) || null;
+  return (
+    get(shapeAtom).points.find((point) => point.id === grabPointId) || null
+  );
 });
 
 export const hoveredPointAtom = atom<TPoint | null>((get) => {
   const hoveredPointId = get(hoveredPointIdAtom);
-  return get(shapeAtom).find((point) => point.id === hoveredPointId) || null;
+  return (
+    get(shapeAtom).points.find((point) => point.id === hoveredPointId) || null
+  );
 });
 
 export const closestSideAtom = atom<[TPoint, TPoint, Vector3] | null>((get) => {
-  const shape = get(shapeAtom);
-  if (shape.length < 2) {
+  const { points } = get(shapeAtom);
+  if (points.length < 2) {
     return null;
   }
   const point = get(planePointAtom);
@@ -44,9 +45,9 @@ export const closestSideAtom = atom<[TPoint, TPoint, Vector3] | null>((get) => {
   let closestSide = 0;
   let closestDistance = Infinity;
 
-  for (let i = 0; i < shape.length; i++) {
-    const a = shape[i];
-    const b = shape[(i + 1) % shape.length];
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i].position;
+    const b = points[(i + 1) % points.length].position;
     const side = new Vector3(b.x - a.x, b.y - a.y, b.z - a.z);
     const toPoint = new Vector3(point.x - a.x, point.y - a.y, point.z - a.z);
     const cross = new Vector3();
@@ -75,8 +76,8 @@ export const closestSideAtom = atom<[TPoint, TPoint, Vector3] | null>((get) => {
   }
 
   const projection = new Vector3(point.x, point.y, point.z);
-  const a = shape[closestSide];
-  const b = shape[(closestSide + 1) % shape.length];
+  const a = points[closestSide].position;
+  const b = points[(closestSide + 1) % points.length].position;
   const side = new Vector3(b.x - a.x, b.y - a.y, b.z - a.z);
 
   const toPoint = new Vector3(point.x - a.x, point.y - a.y, point.z - a.z);
@@ -84,8 +85,8 @@ export const closestSideAtom = atom<[TPoint, TPoint, Vector3] | null>((get) => {
   projection.copy(a).add(side.multiplyScalar(dot / side.lengthSq()));
 
   return [
-    shape[closestSide],
-    shape[(closestSide + 1) % shape.length],
+    points[closestSide],
+    points[(closestSide + 1) % points.length],
     projection as Vector3,
   ];
 });
@@ -95,11 +96,11 @@ export const bpmAtom = atom<number>(20);
 export const currentAngleAtom = atom<number>(45);
 
 export const shapeLengthsAtom = atom<number[]>((get) => {
-  const shape = get(shapeAtom);
+  const { points } = get(shapeAtom);
   const result = [];
-  for (let i = 0; i < shape.length; i++) {
-    const a = shape[i];
-    const b = shape[(i + 1) % shape.length];
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i].position;
+    const b = points[(i + 1) % points.length].position;
     const side = new Vector3(b.x - a.x, b.y - a.y, b.z - a.z);
     result.push(side.length());
   }
@@ -107,8 +108,8 @@ export const shapeLengthsAtom = atom<number[]>((get) => {
 });
 
 export const currentSegmentAtom = atom((get) => {
-  const shape = get(shapeAtom);
-  if (shape.length < 2) {
+  const { points } = get(shapeAtom);
+  if (points.length < 2) {
     return null;
   }
   const angle = get(currentAngleAtom);
@@ -128,8 +129,8 @@ export const currentSegmentAtom = atom((get) => {
   }
 
   const currentSegmentPath = pointOnPath - currentSegmentLength;
-  const pA = shape[currentSegment];
-  const pB = shape[(currentSegment + 1) % shape.length];
+  const a = points[currentSegment];
+  const b = points[(currentSegment + 1) % points.length];
 
   return {
     currentSegment,
@@ -137,8 +138,8 @@ export const currentSegmentAtom = atom((get) => {
     totalLength,
     pointOnPath,
     currentSegmentPath,
-    pA,
-    pB,
+    a,
+    b,
   };
 });
 
@@ -148,14 +149,17 @@ export const flowPositionAtom = atom<Vector3 | null>((get) => {
     return null;
   }
 
-  const { currentSegmentPath, pA, pB } = currentSegmentData;
+  const { currentSegmentPath, a, b } = currentSegmentData;
 
-  const a = tVector3ToVector3(pA);
-  const b = tVector3ToVector3(pB);
-
-  const side = new Vector3(b.x - a.x, b.y - a.y, b.z - a.z);
+  const side = new Vector3(
+    b.position.x - a.position.x,
+    b.position.y - a.position.y,
+    b.position.z - a.position.z
+  );
   const direction = side.clone().normalize();
-  const position = a.clone().add(direction.multiplyScalar(currentSegmentPath));
+  const position = a.position
+    .clone()
+    .add(direction.multiplyScalar(currentSegmentPath));
 
   return position;
 });
@@ -166,9 +170,14 @@ export const currentFlowPointAtom = atom<TPoint | null>((get) => {
     return null;
   }
 
-  const { pA } = segmentData;
+  const { a } = segmentData;
 
-  return pA;
+  return a;
 });
 
 export const soundEnabledAtom = atom<boolean>(false);
+
+export const centroidAtom = atom<Vector3 | null>((get) => {
+  const shape = get(shapeAtom);
+  return calculateCentroid(shape.points.map((point) => point.position));
+});

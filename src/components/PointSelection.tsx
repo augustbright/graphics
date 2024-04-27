@@ -15,7 +15,7 @@ export const PointSelection = () => {
   const isGrabbed = grabId === point.id;
 
   return (
-    <Billboard position={[point.x, point.y, point.z]}>
+    <Billboard position={point.position}>
       <Line
         points={getCirclePoints(1, 16)}
         lineWidth={0.5}

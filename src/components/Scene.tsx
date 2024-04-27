@@ -1,5 +1,5 @@
 import { css } from "@emotion/css";
-import { Canvas, ThreeEvent } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import {
   GizmoHelper,
   GizmoViewport,
@@ -12,55 +12,59 @@ import {
   grabPointIdAtom,
   hoveredPointAtom,
   planePointAtom,
-  shapeAtom,
 } from "../atoms/common";
 import { addPoint } from "../func/common";
-import { useState } from "react";
+import { PointerEvent, useRef, useState } from "react";
 import { Shape } from "./Shape";
 import { NewPointPreview } from "./NewPointPreview";
 import { Flow } from "./Flow";
 import { PointSelection } from "./PointSelection";
 import { effectsAtom } from "../atoms/effects";
+import {
+  Camera,
+  Raycaster,
+  Vector3,
+  Plane as ThreePlane,
+  Vector2,
+} from "three";
+
+const raycaster = new Raycaster();
+const plane = new ThreePlane(new Vector3(0, 0, 1), 0);
 
 export const Scene = () => {
   useAtom(effectsAtom);
+  const camera = useRef(null);
+
+  const getEventPoint = (event: PointerEvent) => {
+    const intersection = new Vector3();
+    const uv = new Vector2();
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    uv.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    uv.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(uv, camera.current as unknown as Camera);
+    raycaster.ray.intersectPlane(plane, intersection);
+    return intersection;
+  };
+
   const [pointMoved, setPointMoved] = useState(false);
 
   const [planePoint, setPlanePoint] = useAtom(planePointAtom);
   const hoveredAtom = useAtomValue(hoveredPointAtom);
   const [grabId, setGrabId] = useAtom(grabPointIdAtom);
-  const [shape, setShape] = useAtom(shapeAtom);
   const handlePointerDown = () => {
     setPointMoved(false);
     if (hoveredAtom) {
       setGrabId(hoveredAtom.id);
     }
   };
-  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
-    setPointMoved(true);
-    setPlanePoint({
-      x: event.point.x,
-      y: event.point.y,
-      z: event.point.z,
-    });
 
-    if (grabId) {
-      setShape(
-        shape.map((point) => {
-          if (point.id === grabId) {
-            return {
-              ...point,
-              x: event.point.x,
-              y: event.point.y,
-              z: event.point.z,
-            };
-          }
-          return point;
-        })
-      );
-    }
+  const handlePointerMove = (event: PointerEvent) => {
+    setPointMoved(true);
+    const eventPoint = getEventPoint(event);
+
+    setPlanePoint(eventPoint.clone());
   };
-  const handlePointerUp = (event: ThreeEvent<PointerEvent>) => {
+  const handlePointerUp = (event: PointerEvent) => {
     if (grabId) {
       setGrabId(null);
       return;
@@ -71,11 +75,8 @@ export const Scene = () => {
     if (hoveredAtom) {
       return;
     }
-    addPoint({
-      x: event.point.x,
-      y: event.point.y,
-      z: event.point.z,
-    });
+    const eventPoint = getEventPoint(event);
+    addPoint(eventPoint.clone());
   };
   return (
     <div
@@ -90,14 +91,21 @@ export const Scene = () => {
         }
       `}
     >
-      <Canvas>
+      <Canvas
+        // @ts-expect-error - OrbitControls typings are incorrect
+        camera={camera}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerMove={handlePointerMove}
+      >
+        <gridHelper rotation={[Math.PI / 2, 0, 0]} />
         <pointLight
           position={[planePoint.x, planePoint.y, 1]}
           intensity={hoveredAtom ? 10.5 : 5}
           color={grabId ? "yellow" : "white"}
         />
         <ambientLight intensity={0.1} />
-        <PerspectiveCamera makeDefault position={[0, 0, 100]} />
+        <PerspectiveCamera ref={camera} makeDefault position={[0, 0, 10]} />
         <OrbitControls
           makeDefault
           enabled={!grabId}
@@ -110,30 +118,18 @@ export const Scene = () => {
           screenSpacePanning
         />
 
-        <Plane
-          args={[10, 10, 10, 10]}
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerMove={handlePointerMove}
-        >
-          <meshStandardMaterial wireframe color="gray" />
+        <Plane args={[1000, 1000, 10, 10]} position={[0, 0, -1]}>
+          <meshPhongMaterial color="gray" />
         </Plane>
         <Shape />
         <PointSelection />
         <NewPointPreview />
         <Flow />
-        <GizmoHelper
-          alignment="bottom-right" // widget alignment within scene
-          margin={[80, 80]} // widget margins (X, Y)
-          // onUpdate={() => {} /* called during camera animation  */}
-          // onTarget={/* return current camera target (e.g. from orbit controls) to center animation */}
-          // renderPriority={/* use renderPriority to prevent the helper from disappearing if there is another useFrame(..., 1)*/}
-        >
+        <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport
             axisColors={["red", "green", "blue"]}
             labelColor="black"
           />
-          {/* alternative: <GizmoViewcube /> */}
         </GizmoHelper>
       </Canvas>
     </div>

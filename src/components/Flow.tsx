@@ -1,8 +1,10 @@
 import { useAtomValue } from "jotai";
-import { flowPositionAtom } from "../atoms/common";
+import { centroidAtom, flowPositionAtom } from "../atoms/common";
+import { Line } from "@react-three/drei";
 
 export const Flow = () => {
   const flowPosition = useAtomValue(flowPositionAtom);
+  const centroid = useAtomValue(centroidAtom);
   if (!flowPosition) {
     return null;
   }
@@ -18,6 +20,18 @@ export const Flow = () => {
         <sphereGeometry args={[0.1, 32, 32]} />
         <meshBasicMaterial color="red" />
       </mesh>
+      {centroid && (
+        <>
+          <mesh position={centroid}>
+            <sphereGeometry args={[0.1, 32, 32]} />
+            <meshBasicMaterial color="red" />
+          </mesh>
+          <Line
+            points={[flowPosition.toArray(), centroid.toArray()]}
+            color="red"
+          />
+        </>
+      )}
     </>
   );
 };

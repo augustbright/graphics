@@ -7,10 +7,6 @@ import {
   selectedPointIdAtom,
 } from "../atoms/common";
 import { Color } from "@react-three/fiber";
-import { useEffect } from "react";
-import { Synth, now } from "tone";
-
-const synth = new Synth().toDestination();
 
 export const ShapePoint = ({ point }: { point: TPoint }) => {
   const [, setHoveredId] = useAtom(hoveredPointIdAtom);
@@ -32,7 +28,7 @@ export const ShapePoint = ({ point }: { point: TPoint }) => {
   return (
     <>
       <Tetrahedron
-        position={[point.x, point.y, point.z]}
+        position={point.position}
         args={[0.5, 1]}
         onPointerEnter={() => {
           setHoveredId(point.id);

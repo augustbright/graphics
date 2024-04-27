@@ -1,11 +1,13 @@
-export type TVector3 = {
-  x: number;
-  y: number;
-  z: number;
-};
+import { Vector3 } from "three";
 
-export type TPoint = TVector3 & {
+export type TVector3 = Vector3;
+
+export type TPoint = {
   id: string;
+  position: TVector3;
 };
 
-export type TShape = Array<TPoint>;
+export type TShape = {
+  id: string;
+  points: Array<TPoint>;
+};

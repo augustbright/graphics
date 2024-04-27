@@ -26,10 +26,7 @@ export const NewPointPreview = () => {
       />
 
       <Line
-        points={[
-          [planePoint.x, planePoint.y, planePoint.z],
-          [pointA.x, pointA.y, pointA.z],
-        ]}
+        points={[planePoint, pointA.position]}
         color="#666"
         lineWidth={1}
         dashOffset={0}
@@ -37,10 +34,7 @@ export const NewPointPreview = () => {
       />
 
       <Line
-        points={[
-          [planePoint.x, planePoint.y, planePoint.z],
-          [pointB.x, pointB.y, pointB.z],
-        ]}
+        points={[planePoint, pointB.position]}
         color="#666"
         lineWidth={1}
         dashOffset={0}
